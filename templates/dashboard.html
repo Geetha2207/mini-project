@@ -1,0 +1,22 @@
+<h2>Detection Dashboard</h2>
+
+<table border="1" cellpadding="10">
+    <tr>
+        <th>Preview</th>
+        <th>Result</th>
+        <th>Risk %</th>
+        <th>Time</th>
+    </tr>
+
+    {% for item in history %}
+    <tr>
+        <td>{{ item.text }}</td>
+        <td>{{ item.result }}</td>
+        <td>{{ item.risk }}%</td>
+        <td>{{ item.time }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br>
+<a href="/home">Back</a>

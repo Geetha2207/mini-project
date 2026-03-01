@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>AI Detector</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>AI Phishing Detection</h1>
+
+        <form action="/predict" method="post" enctype="multipart/form-data">
+
+            <textarea name="email" placeholder="Paste Email Text"></textarea>
+
+            <p>OR Upload PDF</p>
+            <input type="file" name="file">
+
+            <br><br>
+            <button>Detect</button>
+        </form>
+
+        {% if prediction %}
+        <h3>{{prediction}}</h3>
+
+        <p>Phishing Probability: {{risk}}%</p>
+        <p>Safe Probability: {{safe}}%</p>
+        {% endif %}
+
+        <a href="/dashboard">Dashboard</a> |
+        <a href="/logout">Logout</a>
+
+    </div>
+</body>
+
+</html>
