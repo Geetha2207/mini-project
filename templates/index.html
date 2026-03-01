@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>AI Detector</title>
+    <title>AI Phishing Detection</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
@@ -10,30 +10,56 @@
 
     <div class="container">
 
-        <h1>AI Phishing Detection</h1>
+        <h1>🛡️ AI Phishing Detection System</h1>
 
-        <form action="/predict" method="post" enctype="multipart/form-data">
+        <!-- TEXT CHECK -->
+        <div class="card">
+            <h2>Check Email Text</h2>
 
-            <textarea name="email" placeholder="Paste Email Text"></textarea>
+            <form action="/predict" method="POST">
+                <textarea name="email" placeholder="Paste suspicious email here..." required></textarea>
+                <br><br>
+                <button type="submit">🔍 Detect Text</button>
+            </form>
+        </div>
 
-            <p>OR Upload PDF</p>
-            <input type="file" name="file">
+        <!-- FILE CHECK -->
+        <div class="card">
+            <h2>Upload File (PDF / TXT)</h2>
 
-            <br><br>
-            <button>Detect</button>
-        </form>
+            <form action="/upload" method="POST" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".pdf,.txt" required>
+                <br><br>
+                <button type="submit">📂 Scan File</button>
+            </form>
+        </div>
 
+        <!-- RESULT -->
         {% if prediction %}
-        <h3>{{prediction}}</h3>
+        <div class="result">
 
-        <p>Phishing Probability: {{risk}}%</p>
-        <p>Safe Probability: {{safe}}%</p>
+            <h2>{{ prediction }}</h2>
+
+            <p>Phishing Probability: {{ risk }}%</p>
+            <p>Safe Probability: {{ safe }}%</p>
+
+            <!-- AI Risk Meter -->
+            <div class="meter">
+                <span class="risk-bar" data-risk="{{ risk }}">
+        {{ risk }}%
+    </span>
+            </div>
+
+        </div>
         {% endif %}
 
-        <a href="/dashboard">Dashboard</a> |
-        <a href="/logout">Logout</a>
+        <div class="nav">
+            <a href="/dashboard">📊 Dashboard</a> |
+            <a href="/logout">🚪 Logout</a>
+        </div>
 
     </div>
+
 </body>
 
 </html>

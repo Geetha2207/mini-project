@@ -1,46 +1,129 @@
+/* ===== BACKGROUND ===== */
+
 body {
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    font-family: Arial;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
     color: white;
-    text-align: center;
 }
 
-.container,
-.box {
-    background: white;
-    color: black;
-    width: 60%;
+
+/* ===== MAIN CONTAINER ===== */
+
+.container {
+    width: 70%;
     margin: auto;
-    margin-top: 60px;
+    text-align: center;
     padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0px 0px 15px black;
 }
 
-input,
+
+/* ===== TITLE ===== */
+
+h1 {
+    font-size: 38px;
+    margin-bottom: 30px;
+}
+
+
+/* ===== GLASS CARD ===== */
+
+.card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 15px;
+    padding: 25px;
+    margin: 20px 0;
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+
+/* ===== TEXTAREA ===== */
+
 textarea {
     width: 90%;
-    padding: 10px;
-    margin: 10px;
-    border-radius: 6px;
+    height: 140px;
+    border-radius: 10px;
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    outline: none;
 }
+
+
+/* ===== FILE INPUT ===== */
+
+input[type="file"] {
+    padding: 10px;
+}
+
+
+/* ===== BUTTON ===== */
 
 button {
-    background: #2a5298;
-    color: white;
-    padding: 10px 20px;
+    background: linear-gradient(45deg, #00c6ff, #0072ff);
     border: none;
-    border-radius: 6px;
+    padding: 12px 25px;
+    color: white;
+    font-size: 16px;
+    border-radius: 8px;
     cursor: pointer;
+    transition: 0.3s;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 0px 15px #00c6ff;
 }
 
-td,
-th {
-    border: 1px solid black;
-    padding: 10px;
+
+/* ===== RESULT BOX ===== */
+
+.result {
+    margin-top: 25px;
+    padding: 20px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+
+/* ===== RISK BAR ===== */
+
+.meter {
+    width: 80%;
+    height: 22px;
+    background: #333;
+    border-radius: 20px;
+    margin: 15px auto;
+    overflow: hidden;
+}
+
+.meter span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #ff416c, #ff4b2b);
+    text-align: center;
+    line-height: 22px;
+    color: white;
+    font-size: 14px;
+}
+
+
+/* ===== LINKS ===== */
+
+a {
+    color: #00eaff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+
+/* ===== NAV ===== */
+
+.nav {
+    margin-top: 20px;
 }

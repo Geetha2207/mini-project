@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import pickle
-import os
 from datetime import datetime
 from PyPDF2 import PdfReader
 
@@ -11,29 +10,30 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
 # --------------------------------
-# LOAD AI MODEL
+# LOAD MODEL
 # --------------------------------
 model = pickle.load(open("model.pkl", "rb"))
 vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
 
-# store history temporarily
+# store session history
 history = []
 
 # --------------------------------
-# LOGIN PAGE
+# LOGIN
 # --------------------------------
 @app.route("/", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username")
+        password = request.form.get("password")
 
         if username == "admin" and password == "1234":
             session["user"] = username
             return redirect(url_for("home"))
         else:
-            return render_template("login.html", error="Invalid Login")
+            return render_template("login.html",
+                                   error="Invalid Username or Password")
 
     return render_template("login.html")
 
@@ -50,70 +50,61 @@ def home():
 
 
 # --------------------------------
-# EMAIL TEXT PREDICTION
+# AI PREDICTION FUNCTION
 # --------------------------------
-@app.route("/analyze", methods=["POST"])
-def analyze():
+def detect_phishing(text):
 
-    if "user" not in session:
-        return redirect(url_for("login"))
+    if not text or text.strip() == "":
+        return "⚠️ No Content Found", 0, 0
 
-    text = ""
-
-    # ---- TEXT INPUT ----
-    email_text = request.form.get("email")
-
-    if email_text:
-        text += email_text + " "
-
-    # ---- FILE INPUT ----
-    file = request.files.get("file")
-
-    if file and file.filename != "":
-
-        if file.filename.endswith(".txt"):
-            text += file.read().decode("utf-8")
-
-        elif file.filename.endswith(".pdf"):
-            reader = PdfReader(file)
-            for page in reader.pages:
-                extracted = page.extract_text()
-                if extracted:
-                    text += extracted
-
-    # ---- EMPTY CHECK ----
-    if text.strip() == "":
-        return render_template(
-            "index.html",
-            prediction="⚠️ Please enter text or upload file"
-        )
-
-    # ---- AI PREDICTION ----
     vector = vectorizer.transform([text])
     prediction = model.predict(vector)[0]
     probability = model.predict_proba(vector)[0]
 
-    phishing_prob = probability[1] * 100
     safe_prob = probability[0] * 100
+    phishing_prob = probability[1] * 100
 
-    result = "🚨 Phishing Email" if prediction == 1 else "✅ Safe Email"
+    # smarter decision logic
+    if phishing_prob > 70:
+        result = "🚨 Phishing Email"
+    elif phishing_prob < 40:
+        result = "✅ Safe Email"
+    else:
+        result = "⚠️ Suspicious Email"
+
+    return result, round(phishing_prob, 2), round(safe_prob, 2)
+
+
+# --------------------------------
+# TEXT CHECK
+# --------------------------------
+@app.route("/predict", methods=["POST"])
+def predict():
+
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    email_text = request.form.get("email", "")
+
+    result, phishing, safe = detect_phishing(email_text)
 
     history.append({
-        "text": text[:50],
+        "text": email_text[:60],
         "result": result,
-        "risk": round(phishing_prob, 2),
+        "risk": phishing,
         "time": datetime.now().strftime("%H:%M:%S")
     })
 
     return render_template(
         "index.html",
         prediction=result,
-        risk=round(phishing_prob, 2),
-        safe=round(safe_prob, 2)
+        risk=phishing,
+        safe=safe
     )
 
+
 # --------------------------------
-# FILE UPLOAD (PDF / TXT)
+# FILE UPLOAD CHECK
 # --------------------------------
 @app.route("/upload", methods=["POST"])
 def upload():
@@ -121,61 +112,44 @@ def upload():
     if "user" not in session:
         return redirect(url_for("login"))
 
-    if "file" not in request.files:
-        return render_template("index.html",
-                               prediction="No file selected")
+    file = request.files.get("file")
 
-    file = request.files["file"]
-
-    if file.filename == "":
+    if not file or file.filename == "":
         return render_template("index.html",
-                               prediction="No file selected")
+                               prediction="⚠️ No file selected")
 
     text = ""
 
     # TXT FILE
-    if file.filename.lower().endswith(".txt"):
+    if file.filename.endswith(".txt"):
         text = file.read().decode("utf-8", errors="ignore")
 
     # PDF FILE
-    elif file.filename.lower().endswith(".pdf"):
+    elif file.filename.endswith(".pdf"):
         reader = PdfReader(file)
         for page in reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text
+            extracted = page.extract_text()
+            if extracted:
+                text += extracted + " "
 
     else:
         return render_template("index.html",
-                               prediction="Unsupported file")
+                               prediction="❌ Unsupported File")
 
-    # ✅ CHECK EMPTY TEXT
-    if text.strip() == "":
-        return render_template("index.html",
-                               prediction="File has no readable text")
-
-    # MODEL PREDICTION
-    vector = vectorizer.transform([text])
-    prediction = model.predict(vector)[0]
-    probability = model.predict_proba(vector)[0]
-
-    phishing_prob = probability[1] * 100
-    safe_prob = probability[0] * 100
-
-    result = "🚨 Phishing Email" if prediction == 1 else "✅ Safe Email"
+    result, phishing, safe = detect_phishing(text)
 
     history.append({
         "text": "Uploaded File",
         "result": result,
-        "risk": round(phishing_prob, 2),
+        "risk": phishing,
         "time": datetime.now().strftime("%H:%M:%S")
     })
 
     return render_template(
         "index.html",
         prediction=result,
-        risk=round(phishing_prob, 2),
-        safe=round(safe_prob, 2)
+        risk=phishing,
+        safe=safe
     )
 
 
@@ -201,7 +175,7 @@ def logout():
 
 
 # --------------------------------
-# RUN APP
+# RUN SERVER
 # --------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
