@@ -1,19 +1,50 @@
-# AI Phishing Email Detection
+# 🔐 AI Phishing Email Detection System
 
-This project detects phishing emails using Machine Learning.
+A Machine Learning based web application that detects whether an email is Safe or Phishing using NLP.
 
-## Features
-- Email phishing detection
-- Upload text or file
-- ML prediction system
-- Flask web application
+## 📌 Project Overview
+This project analyzes email content and predicts whether the email is legitimate or phishing using Machine Learning.
 
-## Technologies
+## 🚀 Features
+- Detect phishing emails
+- Upload email text or PDF
+- Fast prediction
+- Simple web interface
+
+## 🧠 Technologies Used
 - Python
 - Flask
-- Machine Learning
-- HTML & CSS
+- Scikit-learn
+- HTML, CSS
+- SQLite
+- Git & GitHub
 
-## Run Project
+## 📂 Project Structure
+AI-Phishing-Detection/
+│
+├── app.py
+├── main.py
+├── model.pkl
+├── vectorizer.pkl
+├── static/
+├── templates/
+└── README.md
+
+## ⚙️ Installation
+
+### Clone repository
+git clone https://github.com/Geetha2207/mini-project.git
+
+### Install dependencies
 pip install -r requirements.txt
+
+### Run project
 python app.py
+
+## 🖥️ Output
+The system predicts:
+- Safe Email
+- Phishing Email
+
+## 👩‍💻 Author
+Geetha G — CSE Student
