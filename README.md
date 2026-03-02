@@ -48,3 +48,6 @@ The system predicts:
 
 ## 👩‍💻 Author
 Geetha G — CSE Student
+## 🖼️ Project Screenshot
+
+![Project Screenshot](static/images/project.png)

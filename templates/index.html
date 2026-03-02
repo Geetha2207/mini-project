@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>AI Phishing Detection</title>
+    <title>AI Phishing Detector</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
@@ -10,55 +10,57 @@
 
     <div class="container">
 
-        <h1>🛡️ AI Phishing Detection System</h1>
+        <h1>🛡 AI Phishing Detection System</h1>
 
-        <!-- TEXT CHECK -->
-        <div class="card">
-            <h2>Check Email Text</h2>
+        <form action="/predict" method="post">
+            <textarea name="email" placeholder="Paste Email Content"></textarea>
+            <button class="btn">Analyze Text</button>
+        </form>
 
-            <form action="/predict" method="POST">
-                <textarea name="email" placeholder="Paste suspicious email here..." required></textarea>
-                <br><br>
-                <button type="submit">🔍 Detect Text</button>
-            </form>
-        </div>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file">
+            <button class="btn upload">Upload File</button>
+        </form>
 
-        <!-- FILE CHECK -->
-        <div class="card">
-            <h2>Upload File (PDF / TXT)</h2>
-
-            <form action="/upload" method="POST" enctype="multipart/form-data">
-                <input type="file" name="file" accept=".pdf,.txt" required>
-                <br><br>
-                <button type="submit">📂 Scan File</button>
-            </form>
-        </div>
-
-        <!-- RESULT -->
         {% if prediction %}
         <div class="result">
 
-            <h2>{{ prediction }}</h2>
+            <h2>{{prediction}}</h2>
 
-            <p>Phishing Probability: {{ risk }}%</p>
-            <p>Safe Probability: {{ safe }}%</p>
+            <p>Phishing Probability: {{risk}}%</p>
+            <p>Safe Probability: {{safe}}%</p>
 
-            <!-- AI Risk Meter -->
             <div class="meter">
-                <span class="risk-bar" data-risk="{{ risk }}">
-        {{ risk }}%
-    </span>
+                <span class="risk-bar" data-risk="{{risk}}">
+{{risk}}%
+</span>
             </div>
+
+            {% if reasons %}
+            <h3>⚠ Detected Keywords:</h3>
+            <ul>
+                {% for r in reasons %}
+                <li>{{r}}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
 
         </div>
         {% endif %}
 
-        <div class="nav">
-            <a href="/dashboard">📊 Dashboard</a> |
-            <a href="/logout">🚪 Logout</a>
-        </div>
+        <br>
+        <a href="/dashboard">Dashboard</a> |
+        <a href="/logout">Logout</a>
 
     </div>
+
+    <script>
+        const bar = document.querySelector(".risk-bar");
+        if (bar) {
+            let v = bar.getAttribute("data-risk");
+            bar.style.width = v + "%";
+        }
+    </script>
 
 </body>
 

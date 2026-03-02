@@ -3,179 +3,160 @@ import pickle
 from datetime import datetime
 from PyPDF2 import PdfReader
 
-# --------------------------------
-# APP CONFIG
-# --------------------------------
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-# --------------------------------
+# -----------------------------
 # LOAD MODEL
-# --------------------------------
+# -----------------------------
 model = pickle.load(open("model.pkl", "rb"))
 vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
 
-# store session history
 history = []
 
-# --------------------------------
+# -----------------------------
 # LOGIN
-# --------------------------------
-@app.route("/", methods=["GET", "POST"])
+# -----------------------------
+@app.route("/", methods=["GET","POST"])
 def login():
 
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-
-        if username == "admin" and password == "1234":
-            session["user"] = username
+        if request.form["username"]=="admin" and request.form["password"]=="1234":
+            session["user"]="admin"
             return redirect(url_for("home"))
-        else:
-            return render_template("login.html",
-                                   error="Invalid Username or Password")
+        return render_template("login.html",error="Invalid Login")
 
     return render_template("login.html")
 
 
-# --------------------------------
-# HOME PAGE
-# --------------------------------
+# -----------------------------
+# HOME
+# -----------------------------
 @app.route("/home")
 def home():
     if "user" not in session:
-        return redirect(url_for("login"))
-
+        return redirect("/")
     return render_template("index.html")
 
 
-# --------------------------------
-# AI PREDICTION FUNCTION
-# --------------------------------
-def detect_phishing(text):
-
-    if not text or text.strip() == "":
-        return "⚠️ No Content Found", 0, 0
+# -----------------------------
+# AI ANALYSIS FUNCTION
+# -----------------------------
+def analyze(text):
 
     vector = vectorizer.transform([text])
     prediction = model.predict(vector)[0]
     probability = model.predict_proba(vector)[0]
 
-    safe_prob = probability[0] * 100
-    phishing_prob = probability[1] * 100
+    phishing_prob = round(probability[1]*100,2)
+    safe_prob = round(probability[0]*100,2)
 
-    # smarter decision logic
-    if phishing_prob > 70:
-        result = "🚨 Phishing Email"
-    elif phishing_prob < 40:
-        result = "✅ Safe Email"
-    else:
-        result = "⚠️ Suspicious Email"
+    result = "🚨 Phishing Email" if prediction==1 else "✅ Safe Email"
 
-    return result, round(phishing_prob, 2), round(safe_prob, 2)
+    # explanation logic
+    reasons=[]
+    keywords=["verify","password","urgent","click","bank","login"]
+
+    for word in keywords:
+        if word in text.lower():
+            reasons.append(word)
+
+    return result, phishing_prob, safe_prob, reasons
 
 
-# --------------------------------
-# TEXT CHECK
-# --------------------------------
+# -----------------------------
+# TEXT PREDICTION
+# -----------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
 
     if "user" not in session:
-        return redirect(url_for("login"))
+        return redirect("/")
 
-    email_text = request.form.get("email", "")
+    email_text = request.form.get("email","")
 
-    result, phishing, safe = detect_phishing(email_text)
+    result,risk,safe,reasons = analyze(email_text)
 
     history.append({
-        "text": email_text[:60],
+        "text": email_text[:40],
         "result": result,
-        "risk": phishing,
+        "risk": risk,
         "time": datetime.now().strftime("%H:%M:%S")
     })
 
     return render_template(
         "index.html",
         prediction=result,
-        risk=phishing,
-        safe=safe
+        risk=risk,
+        safe=safe,
+        reasons=reasons
     )
 
 
-# --------------------------------
-# FILE UPLOAD CHECK
-# --------------------------------
+# -----------------------------
+# FILE UPLOAD
+# -----------------------------
 @app.route("/upload", methods=["POST"])
 def upload():
 
     if "user" not in session:
-        return redirect(url_for("login"))
+        return redirect("/")
 
-    file = request.files.get("file")
+    file = request.files["file"]
+    text=""
 
-    if not file or file.filename == "":
-        return render_template("index.html",
-                               prediction="⚠️ No file selected")
-
-    text = ""
-
-    # TXT FILE
     if file.filename.endswith(".txt"):
-        text = file.read().decode("utf-8", errors="ignore")
+        text=file.read().decode("utf-8")
 
-    # PDF FILE
     elif file.filename.endswith(".pdf"):
-        reader = PdfReader(file)
+        reader=PdfReader(file)
         for page in reader.pages:
-            extracted = page.extract_text()
-            if extracted:
-                text += extracted + " "
+            t=page.extract_text()
+            if t:
+                text+=t
 
     else:
         return render_template("index.html",
-                               prediction="❌ Unsupported File")
+                               prediction="Unsupported File")
 
-    result, phishing, safe = detect_phishing(text)
+    result,risk,safe,reasons = analyze(text)
 
     history.append({
-        "text": "Uploaded File",
-        "result": result,
-        "risk": phishing,
-        "time": datetime.now().strftime("%H:%M:%S")
+        "text":"Uploaded File",
+        "result":result,
+        "risk":risk,
+        "time":datetime.now().strftime("%H:%M:%S")
     })
 
     return render_template(
         "index.html",
         prediction=result,
-        risk=phishing,
-        safe=safe
+        risk=risk,
+        safe=safe,
+        reasons=reasons
     )
 
 
-# --------------------------------
+# -----------------------------
 # DASHBOARD
-# --------------------------------
+# -----------------------------
 @app.route("/dashboard")
 def dashboard():
 
     if "user" not in session:
-        return redirect(url_for("login"))
+        return redirect("/")
 
-    return render_template("dashboard.html", history=history)
+    return render_template("dashboard.html",history=history)
 
 
-# --------------------------------
+# -----------------------------
 # LOGOUT
-# --------------------------------
+# -----------------------------
 @app.route("/logout")
 def logout():
-    session.pop("user", None)
-    return redirect(url_for("login"))
+    session.pop("user",None)
+    return redirect("/")
 
 
-# --------------------------------
-# RUN SERVER
-# --------------------------------
-if __name__ == "__main__":
+if __name__=="__main__":
     app.run(debug=True)
